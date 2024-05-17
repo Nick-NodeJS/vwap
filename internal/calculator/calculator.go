@@ -35,10 +35,10 @@ func (v *VWAPCalculator) AddTrade(trade trade.Trade) {
 		return
 	}
 
-	mean := v.CalculateMean(trade.Pair)
+	deviation := v.CalculateStandardDeviation(trade.Pair, true)
 
-	if trade.Price > 3*mean {
-		log.Printf("Wrong trade deviation, mean %f, trade price %f", mean, trade.Price)
+	if deviation != 0 && trade.Price > 3*deviation {
+		log.Printf("Wrong trade price deviation, standart deviation %f, trade price %f", deviation, trade.Price)
 		return
 	}
 
@@ -87,9 +87,11 @@ func (v *VWAPCalculator) CalculateMean(pair string) float64 {
 	return v.PriceSum[pair] / float64(count)
 }
 
-func (v *VWAPCalculator) CalculateStandardDeviation(pair string) float64 {
-	v.mu.Lock()
-	defer v.mu.Unlock()
+func (v *VWAPCalculator) CalculateStandardDeviation(pair string, internal bool) float64 {
+	if !internal {
+		v.mu.Lock()
+		defer v.mu.Unlock()
+	}
 
 	count := len(v.Data[pair])
 	if count == 0 {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"testing"
 	"time"
 
@@ -18,8 +19,11 @@ func TestVWAPCalculator_CalculateVWAP(t *testing.T) {
 	timestamp4 := time.Now().Add(-2 * time.Minute)
 	calculator.AddTrade(trade.Trade{Pair: "BTCUSD", Price: 100, Volume: 10, Time: timestamp1})
 	calculator.AddTrade(trade.Trade{Pair: "BTCUSD", Price: 110, Volume: 15, Time: timestamp2})
+	log.Println("Standart BTCUSD deviation before wrong trade", calculator.CalculateStandardDeviation("BTCUSD", false))
 
 	calculator.AddTrade(trade.Trade{Pair: "BTCUSD", Price: 910, Volume: 5, Time: timestamp3})
+
+	log.Println("Standart BTCUSD deviation after wrong trade", calculator.CalculateStandardDeviation("BTCUSD", false))
 
 	calculator.AddTrade(trade.Trade{Pair: "ETHUSD", Price: 200, Volume: 5, Time: timestamp4})
 

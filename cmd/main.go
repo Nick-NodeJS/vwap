@@ -55,7 +55,7 @@ func main() {
 		for _, pair := range pairs {
 			vwap := calculator.CalculateVWAP(pair)
 			mean := calculator.CalculateMean(pair)
-			stddev := calculator.CalculateStandardDeviation(pair)
+			stddev := calculator.CalculateStandardDeviation(pair, false)
 			log.Printf("VWAP for %s: %.2f, Mean: %.2f, Standard Deviation: %.2f", pair, vwap, mean, stddev)
 		}
 	}
