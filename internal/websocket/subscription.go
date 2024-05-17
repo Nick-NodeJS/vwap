@@ -9,9 +9,9 @@ import (
 
 func Subscribe(conn *websocket.Conn, pair string) error {
 	msg := map[string]string{
-		"event":   "subscribe",
-		"channel": "trades",
-		"pair":    pair,
+		MESSAGE_EVENT:   MESSAGE_SUBSCRIBE,
+		MESSAGE_CHANNEL: MESSAGE_TRADES,
+		MESSAGE_PAIR:    pair,
 	}
 	message, err := json.Marshal(msg)
 	if err != nil {

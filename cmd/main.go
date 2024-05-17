@@ -28,6 +28,7 @@ func main() {
 	}
 	defer conn.Close()
 
+	// Set VWAP calculator
 	calculator := calculator.NewVWAPCalculator(2 * time.Minute)
 	channelPairMapping := make(map[int]string)
 
@@ -43,6 +44,7 @@ func main() {
 
 		vwapwebsocket.HandleMessage(message, channelPairMapping, calculator)
 
+		// Update VWAP on pairs
 		for _, pair := range pairs {
 			vwap := calculator.CalculateVWAP(pair)
 			log.Printf("VWAP for %s: %.2f", pair, vwap)
