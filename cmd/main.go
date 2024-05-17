@@ -33,21 +33,31 @@ func main() {
 	channelPairMapping := make(map[int]string)
 
 	// Dynamically manage subscriptions
-	vwapwebsocket.ManageSubscriptions(conn, pairs)
+	go func() {
+		vwapwebsocket.ManageSubscriptions(conn, pairs)
+	}()
 
-	for {
-		_, message, err := conn.ReadMessage()
-		if err != nil {
-			log.Println("ReadMessage error:", err)
-			continue
+	go func() {
+		for {
+			_, message, err := conn.ReadMessage()
+			if err != nil {
+				log.Println("ReadMessage error:", err)
+				continue
+			}
+
+			vwapwebsocket.HandleMessage(message, channelPairMapping, calculator)
 		}
-
-		vwapwebsocket.HandleMessage(message, channelPairMapping, calculator)
-
-		// Update VWAP on pairs
+	}()
+	// Update VWAP on pairs
+	// go func() {
+	for {
+		time.Sleep(1 * time.Second)
 		for _, pair := range pairs {
 			vwap := calculator.CalculateVWAP(pair)
-			log.Printf("VWAP for %s: %.2f", pair, vwap)
+			mean := calculator.CalculateMean(pair)
+			stddev := calculator.CalculateStandardDeviation(pair)
+			log.Printf("VWAP for %s: %.2f, Mean: %.2f, Standard Deviation: %.2f", pair, vwap, mean, stddev)
 		}
 	}
+	// }()
 }

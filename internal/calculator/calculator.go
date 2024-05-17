@@ -2,6 +2,7 @@ package calculator
 
 import (
 	"log"
+	"math"
 	"sync"
 	"time"
 
@@ -9,15 +10,19 @@ import (
 )
 
 type VWAPCalculator struct {
-	Data      map[string][]trade.Trade
-	mu        sync.Mutex
-	TimeFrame time.Duration
+	Data           map[string][]trade.Trade
+	mu             sync.Mutex
+	TimeFrame      time.Duration
+	PriceSum       map[string]float64
+	PriceSquareSum map[string]float64
 }
 
 func NewVWAPCalculator(timeFrame time.Duration) *VWAPCalculator {
 	return &VWAPCalculator{
-		Data:      make(map[string][]trade.Trade),
-		TimeFrame: timeFrame,
+		Data:           make(map[string][]trade.Trade),
+		TimeFrame:      timeFrame,
+		PriceSum:       make(map[string]float64),
+		PriceSquareSum: make(map[string]float64),
 	}
 }
 
@@ -30,6 +35,15 @@ func (v *VWAPCalculator) AddTrade(trade trade.Trade) {
 		return
 	}
 
+	mean := v.CalculateMean(trade.Pair)
+
+	if trade.Price > 3*mean {
+		log.Printf("Wrong trade deviation, mean %f, trade price %f", mean, trade.Price)
+		return
+	}
+
+	v.PriceSum[trade.Pair] += trade.Price
+	v.PriceSquareSum[trade.Pair] += trade.Price * trade.Price
 	v.Data[trade.Pair] = append(v.Data[trade.Pair], trade)
 	v.cleanup(trade.Pair)
 }
@@ -38,6 +52,8 @@ func (v *VWAPCalculator) cleanup(pair string) {
 	threshold := time.Now().Add(-v.TimeFrame)
 	var i int
 	for i = 0; i < len(v.Data[pair]) && v.Data[pair][i].Time.Before(threshold); i++ {
+		v.PriceSum[pair] -= v.Data[pair][i].Price
+		v.PriceSquareSum[pair] -= v.Data[pair][i].Price * v.Data[pair][i].Price
 	}
 	if i > 0 {
 		v.Data[pair] = v.Data[pair][i:]
@@ -58,4 +74,28 @@ func (v *VWAPCalculator) CalculateVWAP(pair string) float64 {
 		return 0
 	}
 	return totalPriceVolume / totalVolume
+}
+
+func (v *VWAPCalculator) CalculateMean(pair string) float64 {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	count := len(v.Data[pair])
+	if count == 0 {
+		return 0
+	}
+	return v.PriceSum[pair] / float64(count)
+}
+
+func (v *VWAPCalculator) CalculateStandardDeviation(pair string) float64 {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+
+	count := len(v.Data[pair])
+	if count == 0 {
+		return 0
+	}
+	mean := v.PriceSum[pair] / float64(count)
+	variance := (v.PriceSquareSum[pair] / float64(count)) - (mean * mean)
+	return math.Sqrt(variance)
 }

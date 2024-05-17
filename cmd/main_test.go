@@ -15,9 +15,13 @@ func TestVWAPCalculator_CalculateVWAP(t *testing.T) {
 	timestamp1 := time.Now().Add(-5 * time.Minute)
 	timestamp2 := time.Now().Add(-4 * time.Minute)
 	timestamp3 := time.Now().Add(-3 * time.Minute)
+	timestamp4 := time.Now().Add(-2 * time.Minute)
 	calculator.AddTrade(trade.Trade{Pair: "BTCUSD", Price: 100, Volume: 10, Time: timestamp1})
 	calculator.AddTrade(trade.Trade{Pair: "BTCUSD", Price: 110, Volume: 15, Time: timestamp2})
-	calculator.AddTrade(trade.Trade{Pair: "ETHUSD", Price: 200, Volume: 5, Time: timestamp3})
+
+	calculator.AddTrade(trade.Trade{Pair: "BTCUSD", Price: 910, Volume: 5, Time: timestamp3})
+
+	calculator.AddTrade(trade.Trade{Pair: "ETHUSD", Price: 200, Volume: 5, Time: timestamp4})
 
 	// Test VWAP calculation
 	expectedBTCUSDVWAP := 106.0 // ((100 * 10) + (110 * 15)) / (10 + 15)
